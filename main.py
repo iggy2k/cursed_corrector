@@ -1,6 +1,7 @@
 import curses
 from curses.textpad import Textbox, rectangle
 import textwrap
+from autocorrector import *
 TITLE = "\n                     _                           _        \n" +\
         "    ___ _ __ ___  __| |   ___ ___  _ __ _ __ ___| |_ _ __ \n" +\
         "   / __| '__/ __|/ _` |  / __/ _ \| '__| '__/ __| __| '__|\n" +\
@@ -14,7 +15,12 @@ OUTPUT = "Autocorrected output:"
 
 
 def main(stdscr):
+
+    # Init the corrector on a given dict
+    corrector = Autocorrector('words_sorted.txt')
+
     text = ''
+    corrected = ''
     key = 0
     # Exit by pressing escape
     while (key != 27):
@@ -52,11 +58,15 @@ def main(stdscr):
         for y, line in enumerate(TITLE.splitlines()):
             stdscr.addstr(y, title_x, line)
         stdscr.attron(curses.color_pair(1))
+        text.replace('\n', '')
+        for word in text.split():
+            corrected += corrector.correct(word) + ' '
 
         # Properly display processed text
-        for i, line in enumerate(textwrap.wrap(text, 30)):
+        for i, line in enumerate(textwrap.wrap(corrected, 30)):
             stdscr.addstr(subtitle_y // 2 + 10 + i, (input_x) +
-                          input_x // 2, line)
+                          input_x // 2 + 1, line)
+        corrected = ''
 
         # PyJac
         stdscr.attron(curses.color_pair(1))
@@ -98,9 +108,6 @@ def main(stdscr):
         text = textbox.gather()
 
         stdscr.refresh()
-
-    def input(stdscr):
-        return
 
 
 curses.wrapper(main)
