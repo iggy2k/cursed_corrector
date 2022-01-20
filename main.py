@@ -9,7 +9,7 @@ TITLE = "\n                     _                           _        \n" +\
         "   \___|_|  |___/\__,_|  \___\___/|_|  |_|  \___|\__|_|   \n"
 SUBTITLE = "A PyJac project by"
 SUBTITLE2 = "Alex and Ali"
-SUBTITLE3 = "Press ESC to exit. Press CTRL + G to process your text."
+SUBTITLE3 = "Press ESC to exit. Text will be corrected in real time."
 INPUT = "Enter a text to autocorrect:"
 OUTPUT = "Autocorrected output:"
 
@@ -18,10 +18,10 @@ def main(stdscr):
 
     # Init the corrector on a given dict
     corrector = Autocorrector('words_sorted.txt')
-
-    text = ''
     corrected = ''
+    userinput = ''
     key = 0
+
     # Exit by pressing escape
     while (key != 27):
 
@@ -51,6 +51,8 @@ def main(stdscr):
             (cols // 2) - (len(INPUT) // 2) - len(INPUT) % 2)
         output_x = int(
             (cols // 2) - (len(OUTPUT) // 2) - len(OUTPUT) % 2)
+        userinput_x = int(
+            (cols // 2) - (len(userinput) // 2) - len(userinput) % 2)
         subtitle_y = rows // 2
 
         # Title
@@ -58,15 +60,6 @@ def main(stdscr):
         for y, line in enumerate(TITLE.splitlines()):
             stdscr.addstr(y, title_x, line)
         stdscr.attron(curses.color_pair(1))
-        text.replace('\n', '')
-        for word in text.split():
-            corrected += corrector.correct(word) + ' '
-
-        # Properly display processed text
-        for i, line in enumerate(textwrap.wrap(corrected, 30)):
-            stdscr.addstr(subtitle_y // 2 + 10 + i, (input_x) +
-                          input_x // 2 + 1, line)
-        corrected = ''
 
         # PyJac
         stdscr.attron(curses.color_pair(1))
@@ -90,9 +83,36 @@ def main(stdscr):
 
         # Input window zone
         stdscr.attron(curses.color_pair(2))
-        editwin = curses.newwin(5, 30, subtitle_y // 2 + 10, input_x // 2)
         rectangle(stdscr, subtitle_y // 2 + 9, input_x // 2 - 1,
                   subtitle_y + 7, (input_x // 2) + 31)
+
+        # Process letters
+        if 65 <= key <= 122:
+            userinput += chr(key)
+
+        # Limit length
+        if len(userinput) < 240:
+            for i, line in enumerate(textwrap.wrap(userinput, 30)):
+                stdscr.addstr(subtitle_y // 2 + 10 + i,
+                              input_x//2, line)
+        else:
+            for i, line in enumerate(textwrap.wrap(userinput[:239], 30)):
+                stdscr.addstr(subtitle_y // 2 + 10 + i,
+                              input_x//2, line)
+        # Process backspace
+        if key == 8:
+            userinput = userinput[:-1]
+
+        # Correct when entering a new word
+        if key == ord(' '):
+            userinput += ' '
+            corrected += corrector.correct(userinput.split()[-1]) + ' '
+
+        # Properly display processed text
+        stdscr.attron(curses.color_pair(1))
+        for i, line in enumerate(textwrap.wrap(corrected, 30)):
+            stdscr.addstr(subtitle_y // 2 + 10 + i, (input_x) +
+                          input_x // 2 + 1, line)
 
         # Output window zone
         stdscr.attron(curses.color_pair(1))
@@ -100,13 +120,8 @@ def main(stdscr):
                   subtitle_y + 7, (input_x) + input_x//2 + 31)
         outwin = curses.newwin(5, 30, subtitle_y // 2 + 10, input_x +
                                input_x // 2)
-        stdscr.refresh()
-
-        # Textbox magic
-        textbox = Textbox(editwin)
-        textbox.edit()
-        text = textbox.gather()
-
+        # Magic
+        key = stdscr.getch()
         stdscr.refresh()
 
 
