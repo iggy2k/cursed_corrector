@@ -28,7 +28,7 @@ def main(stdscr):
     while (key != 27):
 
         # Magic
-        stdscr.clear()
+        stdscr.erase()
         stdscr.refresh()
         curses.start_color()
 
@@ -64,6 +64,8 @@ def main(stdscr):
         userinput_x = int(
             (cols // 2) - (len(userinput) // 2) - len(userinput) % 2)
         subtitle_y = rows // 2
+
+        stdscr.move(subtitle_y // 2 + 8, input_x // 2 - 1 + len(userinput))
 
         # Title
         stdscr.attron(curses.color_pair(2))
@@ -139,16 +141,19 @@ def main(stdscr):
 
         # Properly display processed text
         stdscr.attron(curses.color_pair(1))
-        for i, line in enumerate(textwrap.wrap(corrected, 30)):
-            stdscr.addstr(subtitle_y // 2 + 10 + i, (input_x) +
-                          input_x // 2 + 1, line)
+        if len(corrected) < 240:
+            for i, line in enumerate(textwrap.wrap(corrected, 30)):
+                stdscr.addstr(subtitle_y // 2 + 10 + i, (input_x) +
+                              input_x // 2 + 1, line)
+        else:
+            for i, line in enumerate(textwrap.wrap(corrected[:239], 30)):
+                stdscr.addstr(subtitle_y // 2 + 10 + i, (input_x) +
+                              input_x // 2 + 1, line)
 
         # Output window zone
         stdscr.attron(curses.color_pair(1))
         rectangle(stdscr, subtitle_y // 2 + 9, (input_x) + input_x//2,
                   subtitle_y + 7, (input_x) + input_x//2 + 31)
-        outwin = curses.newwin(5, 30, subtitle_y // 2 + 10, input_x +
-                               input_x // 2)
         # Magic
         key = stdscr.getch()
         stdscr.refresh()
