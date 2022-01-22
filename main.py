@@ -7,7 +7,7 @@ TITLE = "\n                     _                           _        \n" +\
         "   / __| '__/ __|/ _` |  / __/ _ \| '__| '__/ __| __| '__|\n" +\
         "  | (__| |  \__ \ (_| | | (_| (_) | |  | | | (__| |_| |   \n" +\
         "   \___|_|  |___/\__,_|  \___\___/|_|  |_|  \___|\__|_|   \n"
-SUBTITLE = "A PyJac project by"
+SUBTITLE = "A PyJaC project by"
 SUBTITLE2 = "Alex and Ali"
 SUBTITLE3 = "Press ESC to exit. Text will be corrected in real time."
 SUBTITLE4 = "Press numbers 1, 2 or 3 to choose a suggestion. Default selection is 1."
@@ -99,17 +99,23 @@ def main(stdscr):
         rectangle(stdscr, subtitle_y // 2 + 9, input_x // 2 - 1,
                   subtitle_y + 7, (input_x // 2) + 31)
 
-        # Suggestions
-        stdscr.attron(curses.color_pair(1))
-        for i, suggestion in enumerate(suggestions):
-            stdscr.addstr(subtitle_y // 2 + 10 + i * 2,
-                          (input_x) + 15 - len(suggestion) // 2, suggestion)
-
         # Process suggestions
         if 49 <= key <= 51:
             if len(userinput.split()) > 0:
                 userinput = userinput[:-len(userinput.split()[-1])]
             userinput += suggestions[key - 49]
+
+        # Suggestions
+        stdscr.attron(curses.color_pair(1))
+        for i, suggestion in enumerate(suggestions):
+            if i == key - 49:
+                stdscr.attron(curses.A_STANDOUT)
+                stdscr.addstr(subtitle_y // 2 + 10 + i * 2,
+                              (input_x) + 15 - len(suggestion) // 2, suggestion)
+                stdscr.attroff(curses.A_STANDOUT)
+            else:
+                stdscr.addstr(subtitle_y // 2 + 10 + i * 2,
+                              (input_x) + 15 - len(suggestion) // 2, suggestion)
 
         # Limit length
         if len(userinput) < 240:
