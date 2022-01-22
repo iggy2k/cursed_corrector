@@ -38,7 +38,7 @@ class Autocorrector:
         best_dist = float('inf')
         best_word = None
 
-        for size in range(max(0, len(word1)-1),
+        for size in range(max(1, len(word1)-1),
                           min(self.largest_word_len, len(word1)+2)):
             for match in self.words[size]:
                 dist = lev_dis(word1, match)
@@ -51,3 +51,15 @@ class Autocorrector:
                     best_word = match
 
         return best_word
+
+    def suggest(self, word1: str) -> str:
+        dists = {}
+        res = []
+        for size in range(max(1, len(word1)-1),
+                          min(self.largest_word_len, len(word1)+2)):
+            for match in self.words[size]:
+                dists[match] = lev_dis(word1, match)
+        for i in range(3):
+            res.append(min(dists, key=dists.get))
+            dists.pop(min(dists, key=dists.get))
+        return res

@@ -10,6 +10,7 @@ TITLE = "\n                     _                           _        \n" +\
 SUBTITLE = "A PyJac project by"
 SUBTITLE2 = "Alex and Ali"
 SUBTITLE3 = "Press ESC to exit. Text will be corrected in real time."
+SUBTITLE4 = "Press numbers 1, 2 or 3 to choose a suggestion. Default selection is 1."
 INPUT = "Enter a text to autocorrect:"
 OUTPUT = "Autocorrected output:"
 
@@ -20,11 +21,13 @@ def main(stdscr):
     corrector = Autocorrector('words_sorted.txt')
     corrected = ''
     userinput = ''
+    suggestions = ['suggestions', 'displayed', 'here']
     key = 0
 
     # Exit by pressing escape
     while (key != 27):
 
+        # Magic
         stdscr.clear()
         stdscr.refresh()
         curses.start_color()
@@ -35,6 +38,11 @@ def main(stdscr):
         curses.init_pair(2, 5, 0)
         # Gray on black
         curses.init_pair(3, 8, 0)
+
+        # Process letters
+        if 65 <= key <= 122:
+            userinput += chr(key)
+            suggestions = corrector.suggest(userinput.split()[-1])
 
         # Get window dimensions
         rows, cols = stdscr.getmaxyx()
@@ -47,6 +55,8 @@ def main(stdscr):
             (cols // 2) - (len(SUBTITLE2) // 2) - len(SUBTITLE2) % 2)
         subtitle3_x = int(
             (cols // 2) - (len(SUBTITLE3) // 2) - len(SUBTITLE3) % 2)
+        subtitle4_x = int(
+            (cols // 2) - (len(SUBTITLE4) // 2) - len(SUBTITLE4) % 2)
         input_x = int(
             (cols // 2) - (len(INPUT) // 2) - len(INPUT) % 2)
         output_x = int(
@@ -63,15 +73,18 @@ def main(stdscr):
 
         # PyJac
         stdscr.attron(curses.color_pair(1))
-        stdscr.addstr(subtitle_y // 2 + 2, subtitle_x, SUBTITLE)
+        stdscr.addstr(subtitle_y // 2, subtitle_x, SUBTITLE)
 
         # Authors
         stdscr.attron(curses.color_pair(2))
-        stdscr.addstr(subtitle_y // 2 + 4, subtitle2_x, SUBTITLE2)
+        stdscr.addstr(subtitle_y // 2 + 2, subtitle2_x, SUBTITLE2)
 
         # Exit
         stdscr.attron(curses.color_pair(3))
-        stdscr.addstr(subtitle_y // 2 + 6, subtitle3_x, SUBTITLE3)
+        stdscr.addstr(subtitle_y // 2 + 4, subtitle3_x, SUBTITLE3)
+
+        # Suggestions
+        stdscr.addstr(subtitle_y // 2 + 6, subtitle4_x, SUBTITLE4)
 
         # Input
         stdscr.attron(curses.color_pair(2))
@@ -86,9 +99,17 @@ def main(stdscr):
         rectangle(stdscr, subtitle_y // 2 + 9, input_x // 2 - 1,
                   subtitle_y + 7, (input_x // 2) + 31)
 
-        # Process letters
-        if 65 <= key <= 122:
-            userinput += chr(key)
+        # Suggestions
+        stdscr.attron(curses.color_pair(1))
+        for i, suggestion in enumerate(suggestions):
+            stdscr.addstr(subtitle_y // 2 + 10 + i * 2,
+                          (input_x) + 15 - len(suggestion) // 2, suggestion)
+
+        # Process suggestions
+        if 49 <= key <= 51:
+            if len(userinput.split()) > 0:
+                userinput = userinput[:-len(userinput.split()[-1])]
+            userinput += suggestions[key - 49]
 
         # Limit length
         if len(userinput) < 240:
@@ -99,9 +120,11 @@ def main(stdscr):
             for i, line in enumerate(textwrap.wrap(userinput[:239], 30)):
                 stdscr.addstr(subtitle_y // 2 + 10 + i,
                               input_x//2, line)
+
         # Process backspace
         if key == 8:
             userinput = userinput[:-1]
+            corrected = corrected[:-1]
 
         # Correct when entering a new word
         if key == ord(' '):
